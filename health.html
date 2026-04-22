@@ -1,0 +1,85 @@
+<!-- health.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Health & Activities</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" class="logo" />
+    <nav>
+      <a href="index.html">Today</a>
+      <a href="hourly.html">Hourly</a>
+      <a href="daily.html">Daily</a>
+      <a href="radar.html">Radar</a>
+      <a href="monthly.html">Monthly</a>
+      <a href="air-quality.html">Air Quality</a>
+      <a href="health.html" class="active">Health</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="search">
+      <input type="text" id="cityInput" placeholder="Enter city">
+      <button onclick="getHealthAdvice()">Get Advice</button>
+    </section>
+
+    <section id="healthTips" class="forecast-container">
+      <!-- Health suggestions go here -->
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    async function getHealthAdvice() {
+      const city = document.getElementById('cityInput').value;
+      if (!city) return alert("Enter a city");
+
+      const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`);
+      const geo = await geoRes.json();
+      if (!geo.length) return alert("City not found");
+
+      const { lat, lon } = geo[0];
+
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&units=metric&appid=${API_KEY}`);
+      const data = await res.json();
+
+      const temp = data.current.temp;
+      const humidity = data.current.humidity;
+      const uvi = data.current.uvi;
+      const airRes = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+      const aqi = (await airRes.json()).list[0].main.aqi;
+
+      let healthTips = `<h2>Health Recommendations for ${city}</h2>`;
+
+      if (temp > 35) {
+        healthTips += `<p>🔥 It's hot outside. Stay hydrated and avoid midday sun.</p>`;
+      } else if (temp < 10) {
+        healthTips += `<p>🧣 Cold weather. Dress warmly and protect from wind chill.</p>`;
+      } else {
+        healthTips += `<p>🌤️ Pleasant weather. Great time for outdoor activities.</p>`;
+      }
+
+      if (humidity > 80) {
+        healthTips += `<p>💧 High humidity. Stay in ventilated places.</p>`;
+      }
+
+      if (uvi > 7) {
+        healthTips += `<p>🕶️ High UV index. Wear sunscreen and sunglasses.</p>`;
+      }
+
+      if (aqi >= 4) {
+        healthTips += `<p>😷 Poor air quality. Use masks and avoid heavy exertion outside.</p>`;
+      } else {
+        healthTips += `<p>🫁 Air quality is good. Safe for outdoor exercise.</p>`;
+      }
+
+      document.getElementById("healthTips").innerHTML = `<div class="hour-card">${healthTips}</div>`;
+      document.body.style.backgroundImage = `url('https://source.unsplash.com/1600x900/?healthy,activity,weather')`;
+    }
+  </script>
+</body>
+</html>
