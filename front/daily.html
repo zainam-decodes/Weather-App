@@ -1,0 +1,66 @@
+<!-- daily.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Forecast</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" class="logo" />
+    <nav>
+      <a href="index.html">Today</a>
+      <a href="hourly.html">Hourly</a>
+      <a href="daily.html" class="active">Daily</a>
+      <a href="radar.html">Radar</a>
+      <a href="monthly.html">Monthly</a>
+      <a href="air-quality.html">Air Quality</a>
+      <a href="health.html">Health</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="search">
+      <input type="text" id="cityInput" placeholder="Enter city">
+      <button onclick="getDailyWeather()">Search</button>
+    </section>
+
+    <section id="dailyForecast" class="forecast-container"></section>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    async function getDailyWeather() {
+      const city = document.getElementById('cityInput').value;
+      if (!city) return alert("Enter a city");
+
+      const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`);
+      const geo = await geoRes.json();
+      if (!geo.length) return alert("City not found");
+
+      const { lat, lon } = geo[0];
+
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=hourly,minutely&units=metric&appid=${API_KEY}`);
+      const data = await res.json();
+
+      document.getElementById("dailyForecast").innerHTML = data.daily.slice(0, 7).map(day => {
+        const dt = new Date(day.dt * 1000);
+        return `
+          <div class="hour-card">
+            <h3>${dt.toDateString()}</h3>
+            <img src="https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png" alt="">
+            <p>${day.weather[0].main}</p>
+            <p>🌡️ ${day.temp.min}°C - ${day.temp.max}°C</p>
+            <p>💧 ${day.humidity}%</p>
+            <p>💨 ${day.wind_speed} m/s</p>
+          </div>
+        `;
+      }).join('');
+
+      document.body.style.backgroundImage = `url('https://source.unsplash.com/1600x900/?${data.current.weather[0].main},weather')`;
+    }
+  </script>
+</body>
+</html>

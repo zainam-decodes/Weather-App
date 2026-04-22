@@ -1,0 +1,76 @@
+<!-- monthly.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monthly Forecast</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <img src="assets/logo.png" class="logo" />
+    <nav>
+      <a href="index.html">Today</a>
+      <a href="hourly.html">Hourly</a>
+      <a href="daily.html">Daily</a>
+      <a href="radar.html">Radar</a>
+      <a href="monthly.html" class="active">Monthly</a>
+      <a href="air-quality.html">Air Quality</a>
+      <a href="health.html">Health</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="search">
+      <input type="text" id="cityInput" placeholder="Enter city">
+      <button onclick="getMonthlyAverage()">Search</button>
+    </section>
+
+    <section id="monthlyStats" class="forecast-container">
+      <!-- Monthly summary will appear here -->
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    async function getMonthlyAverage() {
+      const city = document.getElementById('cityInput').value;
+      if (!city) return alert("Enter a city");
+
+      const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${API_KEY}`);
+      const geo = await geoRes.json();
+      if (!geo.length) return alert("City not found");
+
+      const { lat, lon } = geo[0];
+
+      const res = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=hourly,minutely&units=metric&appid=${API_KEY}`);
+      const data = await res.json();
+      const dailyData = data.daily;
+
+      let totalTemp = 0, totalHumidity = 0, totalWind = 0;
+      dailyData.forEach(day => {
+        totalTemp += (day.temp.min + day.temp.max) / 2;
+        totalHumidity += day.humidity;
+        totalWind += day.wind_speed;
+      });
+
+      const avgTemp = (totalTemp / dailyData.length).toFixed(1);
+      const avgHumidity = (totalHumidity / dailyData.length).toFixed(1);
+      const avgWind = (totalWind / dailyData.length).toFixed(1);
+
+      document.getElementById("monthlyStats").innerHTML = `
+        <div class="hour-card">
+          <h2>Monthly Averages for ${city}</h2>
+          <p>🌡️ Avg Temp: ${avgTemp} °C</p>
+          <p>💧 Avg Humidity: ${avgHumidity}%</p>
+          <p>💨 Avg Wind Speed: ${avgWind} m/s</p>
+          <p>☀️ Data based on 7-day forecast</p>
+        </div>
+      `;
+
+      document.body.style.backgroundImage = `url('https://source.unsplash.com/1600x900/?${data.current.weather[0].main},weather')`;
+    }
+  </script>
+</body>
+</html>
