@@ -1,0 +1,21 @@
+.forecast-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin: 20px auto;
+  padding: 10px;
+  max-width: 90%;
+}
+
+.hour-card {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  color: white;
+  transition: transform 0.3s;
+}
+.hour-card:hover {
+  transform: scale(1.05);
+}
